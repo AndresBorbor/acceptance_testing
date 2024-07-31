@@ -27,17 +27,29 @@ def step_given_todo_list_with_tasks(context):
     for row in context.table:
         context.todo_list.add_task(row['title'], row['description'])
 
+# Scenario: List all tasks in the to-do list
 @when('I list all tasks')
 def step_when_list_all_tasks(context):
-    context.list_output = context.todo_list.list_tasks()
+    # Redirect print statements to a string (list) for checking the output
+    import io
+    import sys
+
+    old_stdout = sys.stdout
+    new_stdout = io.StringIO()
+    sys.stdout = new_stdout
+
+    context.todo_list.list_tasks()
+
+    sys.stdout = old_stdout
+    context.list_output = new_stdout.getvalue().split('\n')
 
 @then('the output should contain')
 def step_then_output_contains(context):
     # Extract expected lines from context.table
     expected_lines = []
-    for row in context.table:
+    for i, row in enumerate(context.table, start=1):
         # Format the row with task number, title, and description
-        formatted_row = f"|Task {row['task_number']}: {row['title']:<25} | {row['description']:<20}|"
+        formatted_row = f"|Task {i}: {row['title']:<25} | {row['description']:<20} (Pending)|"
         expected_lines.append(formatted_row)
 
     # Check if each expected line is in the output list
